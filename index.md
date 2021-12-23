@@ -7,14 +7,15 @@ A MAGMA-Accelerated finite field Extension to the `fields` Package.
 # Overview
 ## Description
 ff-MAGMA is an extension of the fields package, which is freely available on CRAN 
-  and is used for spatial statistics and analyzing spatial data. The mKrig and 
-  mKrig.MLE functions from fields are reorganized to be able to use newly provided
+  and is used for spatial statistics and analyzing spatial data. The ``mKrig`` and 
+  ``mKrig.MLE`` functions from ``fields`` are reorganized to be able to use newly provided
   covariance functions that avoid recomputing the distance matrix and only compute 
   the upper triangle for symmetric covariance matrices when possible. This package
   also supports the use of the freely available and open source MAGMA library for 
   using GPUs in addition to multi-core CPUs. MAGMA must be installed on your computer 
-  and it must be linked along with its prerequesite libraries in your ~/.R/Makevars 
+  and it must be linked along with its prerequesite libraries in your ``~/.R/Makevars`` 
   file.
+  
   MAGMA requires CUDA and LAPACK, which are also free.
   
 ## Hardware Requirements
