@@ -1,5 +1,4 @@
 # ff-MAGMA
-GPU functionality to the chol function using MAGMA.
 A MAGMA-Accelerated finite field Extension to the `fields` Package.
 
 # Overview
