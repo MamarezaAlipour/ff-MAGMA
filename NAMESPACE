@@ -1,0 +1,12 @@
+exportPattern("^[^\\.]")
+
+useDynLib(ffMAGMA)
+
+export(stationary.fast.cov,
+       mKrigMAGMA,
+       mKrigMAGMA.MLE,
+       compactToMat,
+       Exp.fast.cov,
+       magmaChol)
+
+import(fields)
