@@ -176,3 +176,115 @@ LIBDIR    = -L$(CUDADIR)/lib64 \
 INC       = -I$(CUDADIR)/include \
             -I$(MKLROOT)/include
 ```
+
+### Mac OS X with gcc 4.8, CUDA 7.0, and OpenBLAS:
+```
+GPU_TARGET = Kepler
+
+CC        = gcc
+CXX       = g++
+NVCC      = nvcc
+FORT      = gfortran
+
+ARCH      = ar
+ARCHFLAGS = cr
+RANLIB    = ranlib
+
+# use -m32 to compile with 32-bit long & pointers.
+# use -m64 to compile with 64-bit long & pointers (lp64). int is still 32-bit.
+# add -DNDEBUG to disable asserts and certain error checks.
+#
+# MacOS veclib has a bug where some single precision functions return
+# a double precision result, for instance slange.
+# This is observed with -m64, but oddly not with -m32.
+# The easiest fix is to replace those routines with correct ones from LAPACK.
+# See BLAS_FIX below.
+# Alternatively, don't link with the veclib/accelerate framework;
+# use a different BLAS and LAPACK library.
+
+# Use -fPIC to make shared (.so) and static (.a) library;
+# can be commented out if making only static library.
+FPIC      = -fPIC
+
+CFLAGS    = -m64 -O3 $(FPIC) -DADD_ -Wall -fopenmp
+FFLAGS    = -m64 -O3 $(FPIC) -DADD_ -Wall -Wno-unused-dummy-argument
+F90FLAGS  = -m64 -O3 $(FPIC) -DADD_ -Wall -Wno-unused-dummy-argument -x f95-cpp-input
+NVCCFLAGS = -m64 -O3         -DADD_       -Xcompiler "-fno-strict-aliasing $(FPIC)"
+LDFLAGS   = -m64     $(FPIC) -fopenmp
+
+# MacOS likes the library's path to be set
+INSTALL_NAME = -install_name @rpath/
+
+LIB       = -framework Accelerate -lopenblas -lcublas -lcudart -lstdc++ -lm
+
+# define library directories preferably in your environment, or here.
+#OPENBLASDIR ?= /usr/local/openblas
+#CUDADIR ?= /usr/local/cuda
+-include make.check-openblas
+-include make.check-cuda
+
+LIBDIR    = -L$(CUDADIR)/lib \
+            -L$(OPENBLASDIR)/lib
+
+INC       = -I$(CUDADIR)/include \
+            -I$(OPENBLASDIR)/include
+
+
+# ========================================
+# replace single & single-complex BLAS functions with reference versions.
+# (i.e., functions that return float; subroutines do not need a fix.)
+LIB      := -L$(MAGMA_DIR)/lib -lblas_fix $(LIB)
+
+BLAS_FIX  = $(MAGMA_DIR)/lib/libblas_fix.a
+
+.PHONY: blas_fix
+
+blas_fix:
+  @echo "======================================== BLAS fix for MacOS"
+	( cd $(MAGMA_DIR)/blas_fix && $(MAKE) )
+	@echo
+
+lib: blas_fix
+```
+
+After make.inc has been created in MAGMA's directory, run "make" to build 
+MAGMA (or "make clean" and then "make" if this is not your first time 
+building MAGMA from this directory).
+
+If MAGMA was built without errors, run the following on the command line 
+in MAGMA's testing directory to make sure MAGMA was installed successfully:
+```
+./testing_dpotrf -c --ngpu 1
+./testing_dpotrf_m -c --ngpu 1
+./testing_spotrf -c --ngpu 1
+./testing_spotrf_m -c --ngpu 1
+```
+Note that the -h option lets the user see specific options that can be 
+used with the above testing scripts to get other options the testing 
+scripts can be used with.  If they all work correctly, then MAGMA has been 
+successfully installed on your system.
+
+## ff-MAGMA
+After you have made sure MAGMA works correctly on your system, you can install 
+ff-MAGMA by modifying (and possibly creating) a ~/.R/Makevars file using 
+your command line.  To do this, open your command line and run:
+```
+cd ~
+ls -a
+```
+If a ".R" directory is shown then run:
+```
+cd .R
+ls
+```
+If the "Makevars" file is not shown, run ``` touch Makevars ``` to create it.  The Makevars file contains variables that R uses to build 
+packages.  Here are the variables important for this installation along with 
+descriptions of what they are for:
+``CC``: C compiler
+``CXX``: C++ compiler
+``F77``: Fortran77 compiler
+``FC``: Fortran compiler
+``PKG_CFLAGS``: Flags (or options) for the C compiler used when building packages.  
+    Also which C headers to include when compiling C code.
+``PKG_LIBS``: Libraries to include when building packages.  In our case, we need 
+    MAGMA, CUDA, and any BLAS and LAPACK libraries you used.
