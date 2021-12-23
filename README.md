@@ -280,6 +280,7 @@ ls
 If the "Makevars" file is not shown, run ``` touch Makevars ``` to create it.  The Makevars file contains variables that R uses to build 
 packages.  Here are the variables important for this installation along with 
 descriptions of what they are for:
+
 ``CC``: C compiler
 ``CXX``: C++ compiler
 ``F77``: Fortran77 compiler
