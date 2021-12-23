@@ -49,7 +49,7 @@ recommended to use the above technical reports as reference.  Until they are
 published, recent versions of the above technical reports will be available on 
 github.  The github repository can be cloned with the command:
 
-git clone https://github.com/parikhaleghi/ff-MAGMA.git
+``` git clone https://github.com/parikhaleghi/ff-MAGMA.git ```
 
 ## a) gcc/icc Compiler Suite
 Note that most toolchains for R using clang, which is the default compiler used 
