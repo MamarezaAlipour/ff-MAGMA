@@ -282,10 +282,113 @@ packages.  Here are the variables important for this installation along with
 descriptions of what they are for:
 
 ``CC``: C compiler
+
 ``CXX``: C++ compiler
+
 ``F77``: Fortran77 compiler
+
 ``FC``: Fortran compiler
+
 ``PKG_CFLAGS``: Flags (or options) for the C compiler used when building packages.  
     Also which C headers to include when compiling C code.
+    
 ``PKG_LIBS``: Libraries to include when building packages.  In our case, we need 
     MAGMA, CUDA, and any BLAS and LAPACK libraries you used.
+
+Now make sure the following lines are in your Makevars file if 
+you are using icc (the Intel C compiler) and built MAGMA with the MKL BLAS 
+library on a 64 bit Linux system with CUDA 6.5:
+
+```
+CC=icc
+CXX=icc
+F77=ifort
+FC=ifort
+PKG_CFLAGS= -I/XXXX/magma-1.6.1/include -I/XXXX/mkl/include \
+-I/XXXX/cuda/6.5/include -DHAVE_CUBLAS -DADD_ -openmp -O3
+PKG_LIBS=/XXXX/magma-1.6.1/lib/libmagma.a \ -L/XXXX/mkl/lib/intel64 \
+-lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lmkl_vml_avx -lmkl_def \
+-L/XXXX/cuda/6.5/lib64 -lcublas -lcudart -openmp
+```
+
+Be sure to substitute the specific paths on you system for "XXXX" along with 
+alternative version numbers and other paths where necessary.  If you are 
+using a Mac then some of the above paths will likely be slightly different 
+depending on where each program was installed.  It also might be necessary 
+to give the paths to icc and ifort.  You can find the paths using the 
+commands:
+```
+which icc
+which ifort
+```
+on the command line.
+
+If you are using gcc on a Mac and built MAGMA with OpenBLAS on a 64 bit 
+system with CUDA 7.0, the following Makevars would be appropriate:
+
+```
+CC=gcc
+CXX=gcc
+F77=gfortran
+FC=gfortran
+PKG_CFLAGS= -I/XXXX/magma-1.6.1/include -I/opt/local/include \
+-I/usr/local/cuda/include -I/Developer/NVIDIA/CUDA-7.0/include -DHAVE_CUBLAS \
+-DADD_ -fopenmp -std=c99
+PKG_LIBS=/XXXX/magma-1.6.1/lib/libmagma.a -L/opt/local/lib \
+-lopenblas -L/usr/local/cuda/lib/ -L/Developer/NVIDIA/CUDA-7.0/lib -lcudart \
+-lcublas -fopenmp
+```
+
+Once again, the true paths that you could use depend on where CUDA and your 
+BLAS libraries are installed on your specific system.  Make sure to substitute 
+the appropriate paths for "XXXX" and the appropriate program versions where 
+necessary.  It may also be necessary to use the exact paths to gcc and 
+gfortran, which can be found using the commands:
+```
+which gcc
+which gfortran
+```
+Overall, the PKG_CFLAGS and PKG_LIBS variables should be set to include all 
+libraries used to build MAGMA.
+
+After the Makevars file has been created and includes MAGMA and all the 
+libraries used to build MAGMA, you will be able to install ff-MAGMA on 
+your system.  To install from source, download the package tarball and on 
+the command line run:
+```
+R CMD BUILD ff-MAGMA_1.0.tar.gz
+R CMD INSTALL ff-MAGMA
+```
+substituting the appropriate version number for "1.0".
+
+Assuming you received no errors when running the above command, you now 
+have ff-MAGMA installed.
+
+If you use RStudio on a Mac, there may still be some problems when loading 
+the package.  Try to load the package from RStudio. You might receive an 
+error similar to:
+```
+Error in dyn.load(file, DLLpath = DLLpath, ...) : 
+  unable to load shared object '/Users/jpaige/Library/R/3.1/library/ff-MAGMA/libs/ff-MAGMA.so':
+  dlopen(/Users/jpaige/Library/R/3.1/library/ff-MAGMA/libs/ff-MAGMA.so, 6): Library not loaded: @rpath/libcudart.7.0.dylib
+  Referenced from: /Users/jpaige/Library/R/3.1/library/ff-MAGMA/libs/ff-MAGMA.so
+  Reason: image not found
+Error: package or namespace load failed for ‘ff-MAGMA’
+```
+That may be due to RStudio, since in our experience when that happens the 
+package is still able to be loaded when running R in Terminal.  If you 
+would like to run ff-MAGMA in RStudio there is an easy fix for this 
+error.  Run ``.libPaths()`` in R to see the location(s) of the packages you have installed to R.  
+Find the ff-MAGMA package directory under the given library paths 
+and go to the "libs" subdirectory.  Use the ``otool -L`` command in Terminal to view the paths to the libraries used by 
+ff-MAGMA. The following command will fix the above error:
+```
+install_name_tool -change "@rpath/libcudart.7.0.dylib" "/Developer/NVIDIA/CUDA-7.0/lib/libcudart.7.0.dylib" ff-MAGMA.so
+```
+substituting paths and library names as appropriate.  You may need to 
+run equivalent commands for other libraries with "@rpath" in the load 
+paths given by the "otool" command given above.
+
+After you have completed the above commands and are able to load the 
+ff-MAGMA library into R, congratulations! You now have access to 
+a substantially accelerated version of the fields package.
